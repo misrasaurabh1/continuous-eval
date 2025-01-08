@@ -9,28 +9,28 @@ def _count_matches(ground_truth, tools, order_sensitive=False):
         # For order-sensitive matching
         matches = 0
         gt_index = 0
+        gt_len = len(ground_truth)
 
         for tool in tools:
-            if gt_index < len(ground_truth) and ground_truth[gt_index] == tool:
+            if gt_index < gt_len and ground_truth[gt_index] == tool:
                 matches += 1
                 gt_index += 1
         return matches
     else:
-        # For order-insensitive matching, convert dictionaries to hashable tuples
-        def make_hashable(obj):
-            if isinstance(obj, dict):
-                return tuple(
-                    sorted((k, make_hashable(v)) for k, v in obj.items())
-                )
-            elif isinstance(obj, list):
-                return tuple(make_hashable(v) for v in obj)
-            else:
-                return obj
-
-        ground_truth_set = set(make_hashable(d) for d in ground_truth)
-        tools_set = set(make_hashable(d) for d in tools)
-        intersection = ground_truth_set & tools_set
+        # For order-insensitive matching
+        ground_truth_set = set(map(_make_hashable, ground_truth))
+        tools_set = set(map(_make_hashable, tools))
+        intersection = ground_truth_set.intersection(tools_set)
         return len(intersection)
+
+
+def _make_hashable(obj):
+    if isinstance(obj, dict):
+        return tuple(sorted((k, _make_hashable(v)) for k, v in obj.items()))
+    elif isinstance(obj, list):
+        return tuple(_make_hashable(v) for v in obj)
+    else:
+        return obj
 
 
 class ToolSelectionAccuracy(Metric):
