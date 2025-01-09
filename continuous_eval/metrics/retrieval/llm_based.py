@@ -49,24 +49,32 @@ class ContextPrecision(ProbabilisticMetric):
         """
         Calculate the context precision score for the given datum.
         """
-        scores = list()
+        scores = []
+        relevant_indices = []
+        relevant_count = 0
+
         for context in retrieved_context:
             score = super().compute(
                 question=question,
                 context=context,
                 use_few_shot=self.use_few_shot,
-            )
-            scores.append(score["ContextPrecision_probabilities"]["yes"])
-        relevant_count = 0
-        mAP = 0
-        for i, score in enumerate(scores):
+            )["ContextPrecision_probabilities"]["yes"]
+            scores.append(score)
             if score > 0.5:
+                relevant_indices.append(len(scores) - 1)
                 relevant_count += 1
-                mAP += relevant_count / (i + 1)  # Precision at this rank
+
         if relevant_count > 0:
-            mAP /= relevant_count  # Average precision
+            mAP = (
+                sum(
+                    (i + 1) / (idx + 1)
+                    for i, idx in enumerate(relevant_indices)
+                )
+                / relevant_count
+            )
         else:
             mAP = 0  # No relevant items found
+
         ret = {
             "percentage_relevant": relevant_count / len(scores),
             "context_precision": sum(scores) / len(scores),
@@ -74,6 +82,7 @@ class ContextPrecision(ProbabilisticMetric):
         }
         if self.log_relevance_by_context:
             ret["context_relevance_by_context"] = scores
+
         return ret
 
     @property
