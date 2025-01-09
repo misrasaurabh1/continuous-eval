@@ -92,10 +92,11 @@ class PromptTemplate:
         return self._user_prompt_template.render(**kwargs)
 
     def render(self, **kwargs):
-        return {
-            "system_prompt": self.system_prompt(**kwargs),
-            "user_prompt": self.user_prompt(**kwargs),
-        }
+        render_func = self._sys_prompt_template.render
+        sys_prompt = render_func(**kwargs)
+        render_func = self._user_prompt_template.render
+        user_prompt = render_func(**kwargs)
+        return {"system_prompt": sys_prompt, "user_prompt": user_prompt}
 
     @property
     def args(self):
