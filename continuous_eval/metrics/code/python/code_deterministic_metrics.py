@@ -18,13 +18,17 @@ class CodeStringMatch(Metric):
     def compute(self, answer: str, ground_truth_answers: List[str], **kwargs):
         max_exact_match = 0
         max_similarity_score = 0
+
         for gt in ground_truth_answers:
-            exact_match = float(answer == gt)
-            similarity_score = fuzz.ratio(answer, gt) / 100
-            if exact_match > max_exact_match:
-                max_exact_match = exact_match
-            if similarity_score > max_similarity_score:
-                max_similarity_score = similarity_score
+            if answer == gt:
+                max_exact_match = 1.0  # Maximum exact match score achieved
+                max_similarity_score = 1.0  # Maximum similarity score achieved
+                break  # No need to continue, we found the best possible match
+            else:
+                similarity_score = fuzz.ratio(answer, gt) / 100
+                if similarity_score > max_similarity_score:
+                    max_similarity_score = similarity_score
+
         return {
             "Exact_Match_Score": max_exact_match,
             "Fuzzy_Match_Score": max_similarity_score,
