@@ -93,8 +93,10 @@ class AzureOpenAI(LLMInterface):
         self.defaults.update(kwargs)
 
     def run(self, prompt: Dict[str, str], temperature: float = 0) -> str:
-        kwargs = self.defaults.copy()
+        # Directly update only the temperature key instead of copying and updating the entire dictionary.
+        kwargs = self.defaults
         kwargs["temperature"] = temperature
+
         response = self.client.chat.completions.create(
             model="<ignored>",
             messages=[
@@ -103,6 +105,8 @@ class AzureOpenAI(LLMInterface):
             ],
             **kwargs,
         )
+
+        # Directly access the message content
         return response.choices[0].message.content
 
 
