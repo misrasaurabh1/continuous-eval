@@ -33,16 +33,15 @@ def str_to_type_hint(type_str: str):
 
 
 def type_hint_to_str(type_hint: Type):
-    if hasattr(type_hint, "__origin__"):  # Check if it's a generic type
-        # Get the base type name (e.g., 'List' or 'Dict')
-        base = type_hint.__origin__.__name__.title()
-        # Recursively process the arguments (e.g., the contents of List, Dict, etc.)
-        args = ", ".join(type_hint_to_str(arg) for arg in type_hint.__args__)
+    origin = getattr(type_hint, "__origin__", None)
+    if origin is not None:  # Check if it's a generic type
+        base = origin.__name__.title()
+        args = ", ".join(map(type_hint_to_str, type_hint.__args__))
         return f"{base}[{args}]"
-    elif hasattr(type_hint, "__name__"):
-        return type_hint.__name__
-    else:
-        return type_hint if isinstance(type_hint, str) else repr(type_hint)
+    name = getattr(type_hint, "__name__", None)
+    if name is not None:
+        return name
+    return type_hint if isinstance(type_hint, str) else repr(type_hint)
 
 
 def instantiate_type(type_hint: Type):
