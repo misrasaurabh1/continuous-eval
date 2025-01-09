@@ -86,7 +86,7 @@ class PromptTemplate:
         return meta.find_undeclared_variables(ast)
 
     def system_prompt(self, **kwargs):
-        return self._sys_prompt_template.render(**kwargs)
+        return self._sys_prompt_template.render(kwargs)
 
     def user_prompt(self, **kwargs):
         return self._user_prompt_template.render(**kwargs)
