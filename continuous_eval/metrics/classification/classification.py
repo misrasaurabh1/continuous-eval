@@ -60,25 +60,35 @@ class SingleLabelClassification(Metric):
         self,
         results: List[Dict[str, Union[str, int]]],
     ) -> Any:
-        if self._classes is None:
-            classes = {r["classification_prediction"] for r in results}
-            classes.update({r["classification_ground_truth"] for r in results})
-            classes = sorted(classes)
-        else:
-            classes = self._classes
-        class_to_index = {c: i for i, c in enumerate(classes)}
-        pred = [class_to_index[r["classification_prediction"]] for r in results]
-        gt = [class_to_index[r["classification_ground_truth"]] for r in results]
+        pred = np.array(
+            [
+                self._class_to_index[r["classification_prediction"]]
+                for r in results
+            ]
+        )
+        gt = np.array(
+            [
+                self._class_to_index[r["classification_ground_truth"]]
+                for r in results
+            ]
+        )
+
+        accuracy = accuracy_score(gt, pred)
+        balanced_accuracy = balanced_accuracy_score(gt, pred)
+        precision = precision_score(
+            gt, pred, average=self._average, zero_division=1.0
+        )
+        recall = recall_score(
+            gt, pred, average=self._average, zero_division=1.0
+        )
+        f1 = f1_score(gt, pred, average=self._average, zero_division=1.0)
+
         return {
-            "accuracy": accuracy_score(gt, pred),
-            "balanced_accuracy": balanced_accuracy_score(gt, pred),
-            "precision": precision_score(
-                gt, pred, average=self._average, zero_division=1.0
-            ),  # type: ignore
-            "recall": recall_score(
-                gt, pred, average=self._average, zero_division=1.0
-            ),  # type: ignore
-            "f1": f1_score(gt, pred, average=self._average, zero_division=1.0),  # type: ignore
+            "accuracy": accuracy,
+            "balanced_accuracy": balanced_accuracy,
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
         }
 
     @property
