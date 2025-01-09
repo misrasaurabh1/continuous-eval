@@ -77,34 +77,29 @@ class PythonASTSimilarity(Metric):
         """
         children_a = list(ast.iter_child_nodes(ast_a))
         children_b = list(ast.iter_child_nodes(ast_b))
+        len_children_a = len(children_a)
+        len_children_b = len(children_b)
+
         if (
             (type(ast_a) is type(ast_b))
-            and len(list(children_a)) == 0
-            and len(list(children_b)) == 0
+            and len_children_a == 0
+            and len_children_b == 0
         ):
             return 1
 
-        if (type(ast_a) is not type(ast_b)) or (
-            len(children_a) != len(children_b)
-        ):
+        if type(ast_a) is not type(ast_b) or len_children_a != len_children_b:
             return 0
 
         if reorder_depth == 0:
-            match_index = sum(
-                map(
-                    lambda pairs: self._compare_ASTs(
-                        pairs[0], pairs[1], reorder_depth
-                    ),
-                    zip(children_a, children_b),
-                )
+            return 1 + sum(
+                self._compare_ASTs(a, b, reorder_depth)
+                for a, b in zip(children_a, children_b)
             )
-            return match_index + 1
 
-        elif reorder_depth > 0:
-            match_index = self._reorder_children_compare(
+        if reorder_depth > 0:
+            return 1 + self._reorder_children_compare(
                 ast_a, ast_b, reorder_depth - 1
             )
-            return match_index + 1
 
         return 0
 
@@ -123,39 +118,34 @@ class PythonASTSimilarity(Metric):
             True if there is a way to match 1-1 every child node of ast_a
             with every child node of ast_b, otherwise False.
         """
-        comparison_matrix = []
-        cost_matrix = []
-        best_match_value = 0
         children_a = list(ast.iter_child_nodes(ast_a))
         children_b = list(ast.iter_child_nodes(ast_b))
+        len_children_a = len(children_a)
+        len_children_b = len(children_b)
 
-        if len(children_a) <= 1 or len(children_b) <= 1:
-            for child_a in children_a:
-                for child_b in children_b:
-                    best_match_value += self._compare_ASTs(
-                        child_a, child_b, reorder_depth
-                    )
-        else:
-            for child_a in children_a:
-                row = []
-                cost_row = []
-                for child_b in children_b:
-                    similarity = self._compare_ASTs(
-                        child_a, child_b, reorder_depth
-                    )
-                    row.append(similarity)
-                    cost_row.append(10000000 - similarity)
+        if len_children_a <= 1 or len_children_b <= 1:
+            return sum(
+                self._compare_ASTs(child_a, child_b, reorder_depth)
+                for child_a in children_a
+                for child_b in children_b
+            )
 
-                comparison_matrix.append(row)
-                cost_matrix.append(cost_row)
+        comparison_matrix = [
+            [
+                self._compare_ASTs(child_a, child_b, reorder_depth)
+                for child_b in children_b
+            ]
+            for child_a in children_a
+        ]
+        cost_matrix = [
+            [10000000 - similarity for similarity in row]
+            for row in comparison_matrix
+        ]
 
-            m = Munkres()
-            indices = m.compute(cost_matrix)  # type: ignore
+        m = Munkres()
+        indices = m.compute(cost_matrix)  # type: ignore
 
-            for row, col in indices:
-                best_match_value += comparison_matrix[row][col]
-
-        return best_match_value
+        return sum(comparison_matrix[row][col] for row, col in indices)
 
     def _compare_subtrees(
         self, sig_subtrees_p1: list, sig_subtrees_p2: list, reorder_depth: int
