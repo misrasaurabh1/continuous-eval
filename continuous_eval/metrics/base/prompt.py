@@ -35,13 +35,18 @@ class PromptTemplate:
         self._validate()
 
     def serialize(self):
+        args_serialized = {}
+        args_items = self._args.items()
+        for k, v in args_items:
+            args_serialized[k] = v.to_dict()
+
         return {
             "system_prompt": self._raw_system_prompt,
             "user_prompt": {
                 "format": "jinja",
                 "template": self._raw_user_prompt,
             },
-            "args": {k: v.to_dict() for k, v in self._args.items()},
+            "args": args_serialized,
         }
 
     def __getstate__(self) -> object:
