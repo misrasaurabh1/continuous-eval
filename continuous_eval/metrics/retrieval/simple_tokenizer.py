@@ -1,6 +1,5 @@
 import re
 import string
-from copy import copy
 from typing import List
 
 from nltk.corpus import stopwords
@@ -24,17 +23,15 @@ class SimpleTokenizer(TokenizerI):
     IS_NUMBER = re.compile(r"^[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?$")
 
     def tokenize(self, text: str, remove_stopwords=True) -> List[str]:
-        text = copy(text.lower())
+        text = text.lower()
 
-        # strip punctuation (including dollar symbol and commas in numbers)
-        text = "".join(
-            [char for char in text if char not in string.punctuation]
-        )
+        # Efficient string translation to remove punctuation
+        translator = str.maketrans("", "", string.punctuation)
+        text = text.translate(translator)
 
         if remove_stopwords:
-            stop_words = set(stopwords.words("english"))
             text = " ".join(
-                [word for word in text.split() if word not in stop_words]
+                [word for word in text.split() if word not in self.stop_words]
             )
 
         # add extra space to make things easier
@@ -46,6 +43,9 @@ class SimpleTokenizer(TokenizerI):
             text = regexp.sub(r" \1 \2 ", text)
 
         return [
-            t if (self.IS_NUMBER.match(t) is None) else float(t)
-            for t in text.split()
+            t if not self.IS_NUMBER.match(t) else float(t) for t in text.split()
         ]
+
+    def __init__(self):
+        # Load stopwords once during initialization instead of every call to tokenize
+        self.stop_words = set(stopwords.words("english"))
