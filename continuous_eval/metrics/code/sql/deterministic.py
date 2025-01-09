@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Dict, List, Optional, Union
 
 from sqlglot import diff, parse_one, transpile
@@ -118,9 +119,9 @@ class SQLASTSimilarity(Metric, _SQLMetric):
         if isinstance(ground_truth_answers, str):
             ground_truth_answers = [ground_truth_answers]
 
-        transformed_answer = self._prepare_query(answer)
+        transformed_answer = self._prepare_query_cached(answer)
         transformed_ground_truths = [
-            self._prepare_query(gt) for gt in ground_truth_answers
+            self._prepare_query_cached(gt) for gt in ground_truth_answers
         ]
 
         try:
@@ -184,3 +185,10 @@ class SQLASTSimilarity(Metric, _SQLMetric):
         return {
             "SQL_AST_Similarity": Field(type=float, limits=(0, 1)),
         }
+
+    @lru_cache(maxsize=128)
+    def _prepare_query_cached(self, sql: str):
+        """
+        Cached version of _prepare_query to avoid redundant processing.
+        """
+        return self._prepare_query(sql)
