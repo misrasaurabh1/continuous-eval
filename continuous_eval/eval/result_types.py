@@ -76,7 +76,7 @@ class PipelineResults:
         return len(self.results)
 
     def is_empty(self) -> bool:
-        return not bool(self.results)
+        return not self.results
 
     def _build_empty_samples(self, pipeline: Pipeline):
         if pipeline is None:
