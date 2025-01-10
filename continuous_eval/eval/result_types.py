@@ -109,7 +109,7 @@ class MetricsResults:
         self.samples = dict()
 
     def is_empty(self) -> bool:
-        return not bool(self.samples)
+        return not self.samples
 
     @cached_property
     def results(self) -> Dict:
