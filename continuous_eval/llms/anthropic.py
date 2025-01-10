@@ -33,8 +33,10 @@ class Anthropic(LLMInterface):
         self.defaults.update(kwargs)
 
     def run(self, prompt: Dict[str, str], temperature: float = 1.0) -> str:
-        kwargs = self.defaults.copy()
-        kwargs["temperature"] = temperature
+        combined_kwargs = {
+            **self.defaults,
+            "temperature": temperature,
+        }
         response = self.client.messages.create(
             model=self.model,
             system=prompt["system_prompt"],
@@ -46,6 +48,6 @@ class Anthropic(LLMInterface):
                     ],
                 }
             ],
-            **kwargs,
+            **combined_kwargs,
         )
-        return response.content[0].text
+        return response["content"][0]["text"]
