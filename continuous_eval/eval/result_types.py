@@ -196,7 +196,7 @@ class TestResults:
         return str(self.results)
 
     def is_empty(self) -> bool:
-        return not bool(self.results)
+        return not self.results
 
     def save(self, filepath: Path):
         assert filepath.suffix == ".json", "File must be a JSON file"
