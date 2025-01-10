@@ -154,9 +154,15 @@ class Integer(ScoringFunction, ResponseFormatBaseType):
         return int  # OpenAI doesn't support Range types in response_format yet
 
     def weighted_score(self, probabilities: Dict[int, float]):
-        return sum(
-            (cat - self._ge) * prob for cat, prob in probabilities.items()
-        ) / (self._le - self._ge)
+        ge = self._ge
+        le = self._le
+        denominator = le - ge
+        total_score = 0
+
+        for cat, prob in probabilities.items():
+            total_score += (cat - ge) * prob
+
+        return total_score / denominator
 
 
 class JSON(ScoringFunction):
