@@ -1,6 +1,6 @@
 import json
 from collections import ChainMap
-from functools import cached_property, lru_cache
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -111,7 +111,7 @@ class MetricsResults:
     def is_empty(self) -> bool:
         return not bool(self.samples)
 
-    @cached_property
+    @property
     def results(self) -> Dict:
         """
         Returns a dictionary containing the evaluation results for each module.
@@ -120,10 +120,13 @@ class MetricsResults:
         - The keys are the names of the modules.
         - The values are lists of dictionaries, where each dictionary represents a result.
         """
-        return {
-            module_name: [dict(ChainMap(*x)) for x in zip(*eval_res.values())]
-            for module_name, eval_res in self.samples.items()
-        }
+        results = {}
+        for module_name, eval_res in self.samples.items():
+            results[module_name] = [
+                {k: v for d in x for k, v in d.items()}
+                for x in zip(*eval_res.values())
+            ]
+        return results
 
     def to_pandas(self):
         """
@@ -144,7 +147,8 @@ class MetricsResults:
                 for inner_dict in dict_list
             ]
         else:
-            flatten = list(*self.results.values())
+            first_key = next(iter(self.results), None)
+            flatten = self.results[first_key] if first_key else []
         return pd.DataFrame(flatten)
 
     @lru_cache(maxsize=1)
