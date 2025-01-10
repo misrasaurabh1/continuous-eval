@@ -74,9 +74,7 @@ class CategoryResponseType(
 
     @classmethod
     def values(cls):
-        return [
-            member.value for member in cls
-        ]  # Custom method to return values as strings
+        return list(cls._value2member_map_.keys())
 
 
 ResponseFormat = Union[CategoryResponseType, ResponseFormatBaseType]
