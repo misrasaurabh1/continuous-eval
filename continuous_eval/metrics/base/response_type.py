@@ -106,11 +106,7 @@ class Integer(ScoringFunction, ResponseFormatBaseType):
         self._le: int = le
 
     def serialize(self):
-        return {
-            "class": self.__class__.__name__,
-            "ge": self._ge,
-            "le": self._le,
-        }
+        return {"class": "Integer", "ge": self._ge, "le": self._le}
 
     @classmethod
     def deserialize(cls, serialized: Dict):
