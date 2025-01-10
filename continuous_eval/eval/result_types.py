@@ -43,25 +43,32 @@ class PipelineResults:
 
     @classmethod
     def from_dict(cls, data: Dict):
+        if not data:
+            raise ValueError("No data found")
+
         eval_results = cls()
-        modules = set(data.keys())
+        modules = data.keys()
         if not modules:
             raise ValueError("No modules found")
-        uids = {module: list(data[module].keys()) for module in modules}
-        if not all_sets_equal(
-            {module: set(uids[module]) for module in modules}
-        ):
+
+        # Extract uids once to avoid redundant dictionary lookups
+        uids_dict = {module: data[module].keys() for module in modules}
+        if not all_sets_equal(uids_dict):
             raise ValueError("Not all uids are the same")
-        uids = uids[next(iter(modules))]
+
+        uids = next(iter(uids_dict.values()))
         if not uids:
             raise ValueError("No samples found")
+
+        append_result = (
+            eval_results.results.append
+        )  # Optimization: Direct function reference
         for uid in uids:
-            eval_results.results.append(
-                {
-                    "uid": uid,
-                    **{module: data[module][uid] for module in modules},
-                }
-            )
+            uid_data = {"uid": uid}
+            for module in modules:
+                uid_data[module] = data[module][uid]
+            append_result(uid_data)  # Using the direct function reference
+
         return eval_results
 
     def initialize(self, pipeline: Pipeline):
