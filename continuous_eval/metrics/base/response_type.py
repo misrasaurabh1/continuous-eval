@@ -129,9 +129,15 @@ class Integer(ScoringFunction, ResponseFormatBaseType):
         return list(range(self._ge, self._le + 1))
 
     def score(self, input_val: str):
-        num = self._numeric_matcher(input_val)
+        num = None
+        pattern = r"\d+(?:\.\d+)?"
+        match = re.search(pattern, input_val)
+        if match:
+            num = float(match.group())
+
         if num is None:
             return self.ge
+
         return max(self._ge, min(self._le, num))
 
     def _numeric_matcher(self, input_val) -> Optional[float]:
